@@ -1,21 +1,18 @@
 const Usuario = require("../models/Usuario");
-const jwt = require('jsonwebtoken'); // Importa o módulo jsonwebtoken para autenticação
+const jwt = require('jsonwebtoken');
 const bcrypt = require("bcryptjs");
-
 
 const criarUsuario = async (req, res) => {
     try {
-        const { nome, usuario, email, senha} = req.body;
+        const { nome, usuario, email, senha } = req.body;
 
-        // Verifica se o email ou usuário já existe
-        const emailExistente = await Usuario.findOne(email);
-
+        const emailExistente = await Usuario.findOne({ email });
         if (emailExistente) {
             return res.status(400).json({ mensagem: "Email já cadastrado." });
         }
 
-        // Cria um novo usuário
-        const novoUsuario = new Usuario({ nome, usuario, email, senha });
+        const senhaCriptografada = await bcrypt.hash(senha, 10);
+        const novoUsuario = new Usuario({ nome, usuario, email, senha: senhaCriptografada });
         await novoUsuario.save();
 
         res.status(201).json({ usuario: novoUsuario });
@@ -24,38 +21,25 @@ const criarUsuario = async (req, res) => {
     }
 };
 
-
-
-
 const loginUsuario = async (req, res) => {
     try {
         const { usuario, senha } = req.body;
 
-        // Verifica se o usuário existe pelo CPF
         const usuarioExiste = await Usuario.findOne({ usuario });
-
         if (!usuarioExiste) {
             return res.status(400).json({ mensagem: "Usuário não encontrado." });
         }
 
-        // Verifica se a senha informada está correta
-        const senhaCorreta = await usuario.compareSenha(senha);
+        const senhaCorreta = await bcrypt.compare(senha, usuarioExiste.senha);
         if (!senhaCorreta) {
             return res.status(400).json({ mensagem: "Senha inválida." });
         }
 
-       
-        // Gera token JWT
-        const token = usuario.generateAuthToken();
+        const token = jwt.sign({ id: usuarioExiste._id }, 'seuSegredoJWT', { expiresIn: '1d' });
+        const { senha: _, ...dadosUsuario } = usuarioExiste.toObject();
 
-        // Remove a senha antes de retornar os dados do usuário
-        const { senha: _, ...dadosUsuario } = usuario.toObject();
-
-       
-
-
-        res.status(200).json({ 
-            mensagem: "Login realizado com sucesso!", 
+        res.status(200).json({
+            mensagem: "Login realizado com sucesso!",
             token,
             usuario: dadosUsuario
         });
@@ -64,13 +48,4 @@ const loginUsuario = async (req, res) => {
     }
 };
 
-
-
-
-
-
-
-
-
-
-module.exports = { criarUsuario, loginUsuario};
+module.exports = { criarUsuario, loginUsuario };
