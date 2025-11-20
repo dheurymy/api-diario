@@ -29,12 +29,13 @@ const loginUsuario = async (req, res) => {
         if (!usuarioExiste) {
             return res.status(400).json({ mensagem: "Usuário não encontrado." });
         }
-
-        const senhaCorreta = await bcrypt.compare(senha, usuarioExiste.senha);
+        // Verifica se a senha informada está correta
+        const senhaCorreta = await usuario.compareSenha(senha);
         if (!senhaCorreta) {
             return res.status(400).json({ mensagem: "Senha inválida." });
         }
 
+        
         const token = jwt.sign({ id: usuarioExiste._id }, 'seuSegredoJWT', { expiresIn: '1d' });
         const { senha: _, ...dadosUsuario } = usuarioExiste.toObject();
 
