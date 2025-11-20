@@ -34,10 +34,13 @@ const loginUsuario = async (req, res) => {
         if (!senhaCorreta) {
             return res.status(400).json({ mensagem: "Senha inválida." });
         }
+        // Gera token JWT
+        const token = usuario.generateAuthToken();
+
+        // Remove a senha antes de retornar os dados do usuário
+        const { senha: _, ...dadosUsuario } = usuario.toObject();
 
         
-        const token = jwt.sign({ id: usuarioExiste._id }, 'seuSegredoJWT', { expiresIn: '1d' });
-        const { senha: _, ...dadosUsuario } = usuarioExiste.toObject();
 
         res.status(200).json({
             mensagem: "Login realizado com sucesso!",
