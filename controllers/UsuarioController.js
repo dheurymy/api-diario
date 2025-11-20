@@ -25,18 +25,18 @@ const loginUsuario = async (req, res) => {
   try {
     const { usuario, senha } = req.body;
 
-    const usuarioExiste = await Usuario.findOne({ usuario });
-    if (!usuarioExiste) {
+    const user = await Usuario.findOne({ usuario });
+    if (!user) {
       return res.status(400).json({ mensagem: "Usuário não encontrado." });
     }
 
-    const senhaCorreta = await usuarioExiste.compareSenha(senha);
+    const senhaCorreta = await user.compareSenha(senha);
     if (!senhaCorreta) {
       return res.status(400).json({ mensagem: "Senha inválida." });
     }
 
-    const token = usuarioExiste.generateAuthToken();
-    const { senha: _, ...dadosUsuario } = usuarioExiste.toObject();
+    const token = user.generateAuthToken();
+    const { senha: _, ...dadosUsuario } = user.toObject();
 
     res.status(200).json({
       mensagem: "Login realizado com sucesso!",
@@ -47,5 +47,6 @@ const loginUsuario = async (req, res) => {
     res.status(500).json({ mensagem: "Erro ao realizar login.", erro });
   }
 };
+
 
 module.exports = { criarUsuario, loginUsuario };
